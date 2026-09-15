@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Runway - Personal finance tracker">
+<meta name="theme-color" content="#141d1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Runway">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23141d1a' width='180' height='180'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='%23ece7db' text-anchor='middle' dominant-baseline='central' font-family='system-ui'>R</text></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23141d1a' width='192' height='192' rx='45'/><text x='50%' y='50%' font-size='100' font-weight='bold' fill='%23ece7db' text-anchor='middle' dominant-baseline='central' font-family='system-ui'>R</text></svg>">
+<link rel="manifest" href="manifest.json">
+<title>Runway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #141d1a;
+    --panel: #1c2825;
+    --panel-raised: #223330;
+    --line: #2c3a36;
+    --ink: #ece7db;
+    --ink-dim: #93a39c;
+    --black-figure: #ece7db;
+    --red-figure: #d97a5f;
+    --gold: #c9a227;
+    --green: #6fae8e;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    overflow: hidden;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 0;
+  }
+  #app { 
+    width: 100%; 
+    max-width: 480px; 
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 28px 16px 80px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  header.top h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+  header.top button {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  header.top button:hover { color: var(--ink); border-color: var(--ink-dim); }
+
+  .hero {
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 26px 22px 22px;
+    margin-bottom: 14px;
+    border: 1px solid var(--line);
+  }
+  .hero .label {
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-bottom: 6px;
+  }
+  .hero .figure {
+    font-size: 52px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .hero .figure.neg { color: var(--red-figure); }
+  .hero .sub {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--ink-dim);
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 16px;
+    margin-bottom: 8px;
+  }
+  .stat-row .left { display: flex; flex-direction: column; gap: 2px; }
+  .stat-row .title { font-size: 14px; color: var(--ink); }
+  .stat-row .desc { font-size: 12px; color: var(--ink-dim); }
+  .stat-row .amt { font-size: 17px; }
+  .stat-row .amt.gold { color: var(--gold); }
+  .stat-row .amt.green { color: var(--green); }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin: 18px 0 22px;
+  }
+  .actions button {
+    flex: 1;
+    padding: 13px 10px;
+    border-radius: 10px;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-pay { background: var(--green); color: #10231b; }
+  .btn-spend { background: var(--red-figure); color: #2a140c; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .panel h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--ink-dim);
+  }
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-bottom: 6px;
+  }
+  .field input[type=number], .field input[type=text], .field input[type=date] {
+    width: 100%;
+    background: var(--panel-raised);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 15px;
+  }
+  .field input[type=range] { width: 100%; accent-color: var(--gold); }
+  .split-readout {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--ink-dim);
+    margin-top: 4px;
+  }
+  .field-row { display: flex; gap: 10px; }
+  .field-row .field { flex: 1; }
+
+  .form-buttons { display: flex; gap: 8px; margin-top: 6px; }
+  .form-buttons button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-confirm { background: var(--ink); color: var(--bg); font-weight: 600; }
+  .btn-cancel { background: transparent; color: var(--ink-dim); border: 1px solid var(--line) !important; }
+
+  .register h2 {
+    font-size: 14px;
+    color: var(--ink-dim);
+    margin: 26px 0 10px;
+    font-weight: 600;
+  }
+  .entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 4px;
+    border-bottom: 1px solid var(--line);
+    gap: 10px;
+  }
+  .entry:last-child { border-bottom: none; }
+  .entry .meta { display: flex; flex-direction: column; min-width: 0; }
+  .entry .note { font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry .date { font-size: 12px; color: var(--ink-dim); }
+  .entry .right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .entry .amt { font-size: 15px; }
+  .entry .amt.in { color: var(--ink); }
+  .entry .amt.out { color: var(--red-figure); }
+  .entry .del {
+    background: none; border: none; color: var(--ink-dim);
+    cursor: pointer; font-size: 16px; line-height: 1; padding: 4px;
+  }
+  .entry .del:hover { color: var(--red-figure); }
+
+  .empty {
+    color: var(--ink-dim);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .settings-toggle {
+    text-align: center;
+    margin-top: 22px;
+  }
+  .settings-toggle button {
+    background: none; border: none; color: var(--ink-dim);
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .reset-btn {
+    width: 100%;
+    margin-top: 4px;
+    background: transparent;
+    border: 1px solid var(--red-figure);
+    color: var(--red-figure);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .hidden { display: none; }
+
+  @supports (padding: max(0px)) {
+    body { padding: max(0px, env(safe-area-inset-top)); }
+    #app { padding-bottom: max(80px, env(safe-area-inset-bottom)); }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const STORAGE_KEY = 'runway:data';
+
+const DEFAULT_STATE = () => ({
+  config: {
+    billsMonthly: 300,
+    stocksWeekly: 200,
+    splitPercent: 50,
+    startDate: todayISO()
+  },
+  paychecks: [],
+  expenses: []
+});
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function money(n) {
+  const sign = n < 0 ? '-' : '';
+  const v = Math.abs(n);
+  return sign + '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+let state = null;
+let view = { settingsOpen: false, payFormOpen: false, spendFormOpen: false };
+
+window.storage = {
+  async get(key, defaultVal) {
+    const val = localStorage.getItem(key);
+    return { value: val };
+  },
+  async set(key, value, encrypt) {
+    localStorage.setItem(key, value);
+  }
+};
+
+async function loadState() {
+  try {
+    const res = await window.storage.get(STORAGE_KEY, false);
+    if (res && res.value) {
+      state = JSON.parse(res.value);
+      const d = DEFAULT_STATE();
+      state.config = Object.assign(d.config, state.config);
+      if (!state.paychecks) state.paychecks = [];
+      if (!state.expenses) state.expenses = [];
+      return;
+    }
+  } catch (e) {
+  }
+  state = DEFAULT_STATE();
+  await persist();
+}
+
+async function persist() {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state), false);
+  } catch (e) {
+    console.error('save failed', e);
+  }
+}
+
+function computeDerived() {
+  const cfg = state.config;
+  const start = new Date(cfg.startDate + 'T00:00:00');
+  const now = new Date();
+  const daysSince = Math.max(0, (now - start) / 86400000);
+
+  const billsAccrued = cfg.billsMonthly * (daysSince / 30.4368);
+  const stocksAccrued = cfg.stocksWeekly * (daysSince / 7);
+
+  const totalIncome = state.paychecks.reduce((s, p) => s + p.amount, 0);
+  const netAfterObligations = totalIncome - billsAccrued - stocksAccrued;
+
+  const leftover = Math.max(0, netAfterObligations);
+  const savingsPool = leftover * (cfg.splitPercent / 100);
+  const spendingPool = leftover * (1 - cfg.splitPercent / 100);
+
+  const totalExpenses = state.expenses.reduce((s, e) => s + e.amount, 0);
+  const available = spendingPool - totalExpenses;
+
+  return {
+    daysSince, billsAccrued, stocksAccrued, totalIncome,
+    netAfterObligations, savingsPool, spendingPool, totalExpenses, available
+  };
+}
+
+function render() {
+  const d = computeDerived();
+  const cfg = state.config;
+  const app = document.getElementById('app');
+
+  const behind = d.netAfterObligations < 0;
+
+  const allEntries = [
+    ...state.paychecks.map(p => ({ ...p, kind: 'paycheck' })),
+    ...state.expenses.map(e => ({ ...e, kind: 'expense' }))
+  ].sort((a, b) => (b.date + b.id).localeCompare(a.date + a.id));
+
+  app.innerHTML = `
+    <header class="top">
+      <h1>Runway</h1>
+      <button id="settingsBtn">Settings</button>
+    </header>
+
+    <div class="hero">
+      <div class="label">${behind ? "You're behind on bills + investing by" : 'Available to spend'}</div>
+      <div class="figure num ${behind || d.available < 0 ? 'neg' : ''}">${money(behind ? d.netAfterObligations : d.available)}</div>
+      <div class="sub">${
+        behind
+          ? "Once your next paycheck lands, this comes out of it first."
+          : `${money(d.spendingPool)} set aside for spending, ${money(d.totalExpenses)} logged so far.`
+      }</div>
+    </div>
+
+    <div class="stat-row">
+      <div class="left">
+        <div class="title">Bills</div>
+        <div class="desc">$${cfg.billsMonthly}/mo, accruing daily</div>
+      </div>
+      <div class="amt num">${money(d.billsAccrued)}</div>
+    </div>
+    <div class="stat-row">
+      <div class="left">
+        <div class="title">Investing</div>
+        <div class="desc">$${cfg.stocksWeekly}/wk, accruing daily</div>
+      </div>
+      <div class="amt num gold">${money(d.stocksAccrued)}</div>
+    </div>
+    <div class="stat-row">
+      <div class="left">
+        <div class="title">Savings</div>
+        <div class="desc">${cfg.splitPercent}% of what's left over</div>
+      </div>
+      <div class="amt num green">${money(d.savingsPool)}</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-pay" id="openPay">+ Got paid</button>
+      <button class="btn-spend" id="openSpend">− Log spending</button>
+    </div>
+
+    ${view.payFormOpen ? payForm() : ''}
+    ${view.spendFormOpen ? spendForm() : ''}
+
+    <div class="register">
+      <h2>Register</h2>
+      ${allEntries.length === 0 ? '<div class="empty">Nothing logged yet. Add a paycheck to start the clock.</div>' : ''}
+      ${allEntries.map(entryRow).join('')}
+    </div>
+
+    ${view.settingsOpen ? settingsPanel() : ''}
+  `;
+
+  attachHandlers();
+}
+
+function entryRow(e) {
+  const isPay = e.kind === 'paycheck';
+  const note = isPay ? 'Paycheck' : (e.note || 'Spending');
+  return `
+    <div class="entry">
+      <div class="meta">
+        <div class="note">${escapeHtml(note)}</div>
+        <div class="date">${formatDate(e.date)}</div>
+      </div>
+      <div class="right">
+        <div class="amt num ${isPay ? 'in' : 'out'}">${isPay ? '+' : '−'}${money(Math.abs(e.amount))}</div>
+        <button class="del" data-kind="${e.kind}" data-id="${e.id}" title="Delete">×</button>
+      </div>
+    </div>
+  `;
+}
+
+function formatDate(iso) {
+  const dt = new Date(iso + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function payForm() {
+  return `
+    <div class="panel">
+      <h2>Add paycheck</h2>
+      <div class="field">
+        <label for="payAmount">Amount</label>
+        <input type="number" id="payAmount" inputmode="decimal" placeholder="0.00" step="0.01">
+      </div>
+      <div class="field">
+        <label for="payDate">Date</label>
+        <input type="date" id="payDate" value="${todayISO()}">
+      </div>
+      <div class="form-buttons">
+        <button class="btn-cancel" id="cancelPay">Cancel</button>
+        <button class="btn-confirm" id="confirmPay">Add</button>
+      </div>
+    </div>
+  `;
+}
+
+function spendForm() {
+  return `
+    <div class="panel">
+      <h2>Log spending</h2>
+      <div class="field">
+        <label for="spendAmount">Amount</label>
+        <input type="number" id="spendAmount" inputmode="decimal" placeholder="0.00" step="0.01">
+      </div>
+      <div class="field">
+        <label for="spendNote">What was it</label>
+        <input type="text" id="spendNote" placeholder="e.g. takeout, impulse buy">
+      </div>
+      <div class="field">
+        <label for="spendDate">Date</label>
+        <input type="date" id="spendDate" value="${todayISO()}">
+      </div>
+      <div class="form-buttons">
+        <button class="btn-cancel" id="cancelSpend">Cancel</button>
+        <button class="btn-confirm" id="confirmSpend">Add</button>
+      </div>
+    </div>
+  `;
+}
+
+function settingsPanel() {
+  const cfg = state.config;
+  return `
+    <div class="panel" id="settingsPanel">
+      <h2>Settings</h2>
+      <div class="field-row">
+        <div class="field">
+          <label for="cfgBills">Bills per month</label>
+          <input type="number" id="cfgBills" value="${cfg.billsMonthly}" step="1">
+        </div>
+        <div class="field">
+          <label for="cfgStocks">Investing per week</label>
+          <input type="number" id="cfgStocks" value="${cfg.stocksWeekly}" step="1">
+        </div>
+      </div>
+      <div class="field">
+        <label for="cfgSplit">Savings share of what's left over</label>
+        <input type="range" id="cfgSplit" min="0" max="100" value="${cfg.splitPercent}">
+        <div class="split-readout">
+          <span id="splitReadoutSave">${cfg.splitPercent}% savings</span>
+          <span id="splitReadoutSpend">${100 - cfg.splitPercent}% spending</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cfgStart">Tracking start date</label>
+        <input type="date" id="cfgStart" value="${cfg.startDate}">
+      </div>
+      <button class="reset-btn" id="resetAll">Clear all data and start over</button>
+    </div>
+  `;
+}
+
+function attachHandlers() {
+  document.getElementById('settingsBtn').onclick = () => {
+    view.settingsOpen = !view.settingsOpen;
+    render();
+  };
+
+  document.getElementById('openPay').onclick = () => {
+    view.payFormOpen = true;
+    view.spendFormOpen = false;
+    render();
+    document.getElementById('payAmount')?.focus();
+  };
+  document.getElementById('openSpend').onclick = () => {
+    view.spendFormOpen = true;
+    view.payFormOpen = false;
+    render();
+    document.getElementById('spendAmount')?.focus();
+  };
+
+  const cancelPay = document.getElementById('cancelPay');
+  if (cancelPay) cancelPay.onclick = () => { view.payFormOpen = false; render(); };
+  const confirmPay = document.getElementById('confirmPay');
+  if (confirmPay) confirmPay.onclick = async () => {
+    const amt = parseFloat(document.getElementById('payAmount').value);
+    const date = document.getElementById('payDate').value || todayISO();
+    if (!amt || amt <= 0) return;
+    state.paychecks.push({ id: uid(), amount: amt, date });
+    view.payFormOpen = false;
+    await persist();
+    render();
+  };
+
+  const cancelSpend = document.getElementById('cancelSpend');
+  if (cancelSpend) cancelSpend.onclick = () => { view.spendFormOpen = false; render(); };
+  const confirmSpend = document.getElementById('confirmSpend');
+  if (confirmSpend) confirmSpend.onclick = async () => {
+    const amt = parseFloat(document.getElementById('spendAmount').value);
+    const note = document.getElementById('spendNote').value;
+    const date = document.getElementById('spendDate').value || todayISO();
+    if (!amt || amt <= 0) return;
+    state.expenses.push({ id: uid(), amount: amt, note, date });
+    view.spendFormOpen = false;
+    await persist();
+    render();
+  };
+
+  document.querySelectorAll('.del').forEach(btn => {
+    btn.onclick = async () => {
+      const kind = btn.dataset.kind;
+      const id = btn.dataset.id;
+      if (kind === 'paycheck') state.paychecks = state.paychecks.filter(p => p.id !== id);
+      else state.expenses = state.expenses.filter(e => e.id !== id);
+      await persist();
+      render();
+    };
+  });
+
+  const splitSlider = document.getElementById('cfgSplit');
+  if (splitSlider) {
+    splitSlider.oninput = () => {
+      const v = parseInt(splitSlider.value);
+      document.getElementById('splitReadoutSave').textContent = v + '% savings';
+      document.getElementById('splitReadoutSpend').textContent = (100 - v) + '% spending';
+    };
+    splitSlider.onchange = async () => {
+      state.config.splitPercent = parseInt(splitSlider.value);
+      await persist();
+      render();
+    };
+  }
+
+  const cfgBills = document.getElementById('cfgBills');
+  if (cfgBills) cfgBills.onchange = async () => {
+    state.config.billsMonthly = parseFloat(cfgBills.value) || 0;
+    await persist();
+    render();
+  };
+  const cfgStocks = document.getElementById('cfgStocks');
+  if (cfgStocks) cfgStocks.onchange = async () => {
+    state.config.stocksWeekly = parseFloat(cfgStocks.value) || 0;
+    await persist();
+    render();
+  };
+  const cfgStart = document.getElementById('cfgStart');
+  if (cfgStart) cfgStart.onchange = async () => {
+    state.config.startDate = cfgStart.value;
+    await persist();
+    render();
+  };
+
+  const resetAll = document.getElementById('resetAll');
+  if (resetAll) resetAll.onclick = async () => {
+    if (!confirm('This clears every paycheck and spending entry and resets the clock. Continue?')) return;
+    const keepConfig = { ...state.config, startDate: todayISO() };
+    state = DEFAULT_STATE();
+    state.config = keepConfig;
+    await persist();
+    render();
+  };
+}
+
+(async function init() {
+  document.getElementById('app').innerHTML = '<div class="empty">Loading…</div>';
+  await loadState();
+  render();
+  
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+</body>
+</html>
